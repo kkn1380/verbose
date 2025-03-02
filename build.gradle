@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'atan.code.verbose'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'commons-codec:commons-codec:1.18.0'
+    implementation 'com.google.guava:guava:18.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+//    implementation 'io.github.novacrypto:Base58:2022.01.17'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+application {
+    // 메인 클래스 설정
+    mainClass = 'atan.code.verbose.Main'
+}
+
+jar {
+    archiveBaseName.set('verbose') // JAR 파일 기본 이름
+    manifest {
+        attributes(
+                'Main-Class': 'atan.code.verbose.Main' // 메인 클래스 경로
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE // 중복 리소스 무시
+    from {
+        configurations.compileClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    /*
+    서명된 JAR의 META-INF 파일 제거
+    bouncycastle의 경우 파일 안에 서명값이 존재.
+    jar 생성 시 서명 값을 줄 수 있는데 그 경우 JVM이 실행 시 jar를 검증하게 되는데
+    bouncycastle이 포함되면서 bouncycastle의 서명 값이 포함되게 되는데 이 경우 bouncycastle만 jar에 존재하는게 아니기 때문에 서명값이 잘못된 값임.
+    따라서 서명 값을 모두 삭제해야 한다.
+     */
+    exclude("META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA")
+}
+
+test {
+    useJUnitPlatform()
+}
